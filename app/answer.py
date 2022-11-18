@@ -3,6 +3,7 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import CallbackContext
 from typing import Callable
 from settings import PATH_STATIC
+from app.parsing import ParserProgram
 
 
 class Answer:
@@ -55,7 +56,32 @@ class AnswerText(Answer):
         self.url_site = "https://smartyar.timepad.ru/events/"
 
     def upcoming_programs(self, update: Update, context: CallbackContext):
-        pass
+        chat = update.effective_chat
+        buttons = ReplyKeyboardMarkup(
+            [
+                ['Ближайшие программы', 'О проекте'],
+                ['Место проведения программ', "Где купить билеты"],
+                ['Частые вопросы'],
+            ],
+            resize_keyboard=True
+        )
+
+        pp = ParserProgram()
+        data = pp.get_data()
+        for prog in data:
+            text = (
+                "Название программы: " + prog.name + "\n" +
+                "Когда: " + prog.period + "\n" +
+                "Через сколько: " + prog.time_data + "\n" +
+                "О чём: " + prog.description + "\n" +
+                f'<a href="{prog.link}">Подробнее</a>'
+            )
+            context.bot.send_message(
+                chat_id=chat.id,
+                text=text,
+                reply_markup=buttons,
+                parse_mode="HTML"
+            )
 
     def about(self, update: Update, context: CallbackContext):
         text = (
